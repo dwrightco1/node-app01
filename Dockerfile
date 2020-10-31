@@ -1,6 +1,6 @@
 FROM node:10-alpine
-WORKDIR /node-app01
+WORKDIR /nodeapp
 ENV PORT 81
 COPY . .
 RUN yarn install --production
-CMD ["node", "/node-app01/server.js"]
+CMD ["node", "/nodeapp/server.js"]
