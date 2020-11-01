@@ -18,21 +18,21 @@ const port = process.env.PORT || 80
 //  });
 //});
 
-var mysql = require('mysql');
-var connection = mysql.createConnection({
-	host: '172.17.0.3',
-	user: 'root',
-	password: 'Passw0rd',
-	database: 'nodeapp'
-});
+//var mysql = require('mysql');
+//var connection = mysql.createConnection({
+//	host: '172.17.0.3',
+//	user: 'root',
+//	password: 'Passw0rd',
+//	database: 'nodeapp'
+//});
 
-connection.query('SHOW TABLES',function (error, rows, fields) {
-    if (error)
-        return console.log(error);
-    console.log(rows);
-});
+//connection.query('SHOW TABLES',function (error, rows, fields) {
+//    if (error)
+//        return console.log(error);
+//    console.log(rows);
+//});
 
-connection.end();
+//connection.end();
 
 fs.readFile('./index.html', function (err, html) {
     if (err) {
