@@ -1,33 +1,37 @@
 const http = require('http')
 const fs = require('fs')
-const port = process.env.PORT || 81
-const database_ip = process.env.DATABASE_IP || "172.17.0.2"
+const port = process.env.NODE_PORT || 81
+const database_ip = process.env.DATABASE_IP || "ip-not-specified"
+const database_user = process.env.DATABASE_USER || "user-not-specified"
+const database_pw = process.env.DATABASE_PW || "password-not-specified"
+const database_name = process.env.DATABASE_NAME || "instance-not-specified"
 
 var mysql = require('mysql');
-var connection = mysql.createConnection({
-	host: '172.17.0.2',
-	user: 'root',
-	password: 'Passw0rd',
-	database: 'nodeapp'
+
+console.log("NODEAPP: initializing database connection: " + database_user + "@" + database_ip + ":" + database_name)
+var con = mysql.createConnection({
+  host: database_ip,
+  user: database_user,
+  password: database_pw,
+  database: "nodeapp"
 });
 
-var mysql_return = ""
-connection.query('SHOW TABLES',function (error, rows, fields) {
-    if (error)
-        return console.log(error);
-    console.log(rows);
-    mysql_return = rows
+con.connect(function(err) {
+  if (err) throw err;
+  console.log("NODEAPP: querying database")
+  con.query("SELECT * FROM appconfig", function (err, result, fields) {
+    if (err) throw err;
+    console.log(result);
+  });
 });
-
-connection.end();
 
 fs.readFile('./index.html', function (err, html) {
     if (err) {
         throw err;
     }
+    console.log("NODEAPP: starting http listener on port " + port)
     http.createServer(function(request, response) {
         response.writeHeader(200, {"Content-Type": "text/html"});
-        response.write(mysql_return);
         response.write(html);
         response.end();
     }).listen(port);
