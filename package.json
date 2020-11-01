@@ -10,7 +10,10 @@
     "mysql": "~2.3.2"
   },
   "engines": {
-    "node": "10.x"
+    "node": "8.x"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "ws": "3.3.2"
+  }
 }
