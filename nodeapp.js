@@ -1,14 +1,22 @@
 // initialize web server & database parameters
-const port = process.env.PORT || 80
-const database_ip = process.env.DATABASE_IP || "unset"
-const database_user = process.env.DATABASE_USER || "unset"
-const database_pw = process.env.DATABASE_PW || "unset"
-const database_name = process.env.DATABASE_NAME || "unset"
+const port = process.env.NODEAPP_WEB_PORT || 80
+const database_user = process.env.NODEAPP_DB_USER || "unset"
+const database_pw = process.env.NODEAPP_DB_PASSWORD || "unset"
+const database_name = process.env.NODEAPP_DB_NAME || "unset"
 
 // required modules
 const http = require('http')
 const mysql = require('mysql')
 const fs = require('fs')
+const dns = require('dns')
+
+// lookup ip for database
+var database_ip = "unresolved-ip"
+dns.lookup('mysql-service', function(err, result) {
+  console.log("dns.lookup(mysql-service) = " + result)
+  database_ip = result
+  console.log("database_ip = " + database_ip)
+})
 
 // get IP
 var os = require( 'os' );
@@ -16,6 +24,12 @@ var networkInterfaces = os.networkInterfaces( );
 
 // initialize database return buffer
 var db_return_data = `Attempting to connect to database: ${database_user}@${database_ip}:${database_name}`
+
+// display copnfig params
+console.log("NODEAPP: NODEAPP_WEB_PORT = " + port)
+console.log("NODEAPP: NODEAPP_DB_USER = " + database_user)
+console.log("NODEAPP: NODEAPP_DB_PASSWORD = " + database_pw)
+console.log("NODEAPP: NODEAPP_DB_NAME = " + database_name)
 
 console.log("NODEAPP: starting http listener on port " + port)
 console.log(networkInterfaces)
