@@ -7,13 +7,21 @@ const database_name = process.env.DATABASE_NAME || "unset"
 
 // required modules
 const http = require('http')
-const mysql = require('mysql');
+const mysql = require('mysql')
 const fs = require('fs')
+
+// get IP
+var os = require( 'os' );
+var networkInterfaces = os.networkInterfaces( );
 
 // initialize database return buffer
 var db_return_data = `Attempting to connect to database: ${database_user}@${database_ip}:${database_name}`
 
 console.log("NODEAPP: starting http listener on port " + port)
+console.log(networkInterfaces)
+for (const key in networkInterfaces) {
+    console.log("NODEAPP: IP = " + networkInterfaces[key][0]['address'])
+}
 
 http.createServer(function(request, response) {
     // update log
@@ -59,5 +67,8 @@ http.createServer(function(request, response) {
     });
     response.writeHeader(200, {"Content-Type": "text/html"});
     response.write(db_return_data + "\n");
+    for (const key in networkInterfaces) {
+        response.write("IP Address (" + key + ") = " + networkInterfaces[key][0]['address'] + "\n")
+    }
     response.end();
 }).listen(port);
