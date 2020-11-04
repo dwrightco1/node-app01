@@ -1,0 +1,180 @@
+# create namespace
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: nodeapp-dev
+  labels:
+    env: nodeapp-dev
+
+# load secrets
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: nodeapp-secrets
+  namespace: nodeapp-dev
+type: Opaque
+data:
+  NODEAPP_DB_PASSWORD: UGFzc3cwcmQ=
+
+########################################
+# back-end
+########################################
+# configmaps
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-initdb-config
+  namespace: nodeapp-dev
+data:
+  initdb.sql: |
+    drop database if exists nodeapp;
+    create database nodeapp;
+    use nodeapp;
+    create table appconfig (
+            task_id INT AUTO_INCREMENT PRIMARY KEY,
+            task_name varchar(32)
+    );
+
+# volume claims
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-data-disk
+  namespace: nodeapp-dev
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+
+# service
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-service
+  namespace: nodeapp-dev
+spec:
+  selector:
+    app: mysql
+  ports:
+  - protocol: TCP
+    port: 3306
+    targetPort: 3306
+
+# deployment
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql-deployment
+  namespace: nodeapp-dev
+  labels:
+    app: mysql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+        - name: mysql
+          image: mysql:5.7
+          ports:
+            - containerPort: 3306
+          volumeMounts:
+            - mountPath: "/var/lib/mysql"
+              subPath: "mysql"
+              name: mysql-data
+            - name: mysql-initdb
+              mountPath: /docker-entrypoint-initdb.d
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: nodeapp-secrets
+                  key: NODEAPP_DB_PASSWORD
+      volumes:
+        - name: mysql-data
+          persistentVolumeClaim:
+            claimName: mysql-data-disk
+        - name: mysql-initdb
+          configMap:
+            name: mysql-initdb-config
+
+########################################
+# front-end
+########################################
+# configmaps
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nodeapp-configmap
+  namespace: nodeapp-dev
+data:
+  NODEAPP_WEB_PORT: "81"
+  NODEAPP_DB_USER: "root"
+  NODEAPP_DB_NAME: "nodeapp"
+
+# service
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nodeapp-service
+  namespace: nodeapp-dev
+spec:
+  selector:
+    app: nodeapp
+  ports:
+    - protocol: TCP
+      port: 3000
+      targetPort: 81
+  type: LoadBalancer
+
+# deployment
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: nodeapp-dev
+  creationTimestamp: null
+  labels:
+    app: nodeapp
+  name: nodeapp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nodeapp
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: nodeapp
+    spec:
+      containers:
+      - image: dyvantage01/nodeapp:1.1.6
+        name: nodeapp
+        env:
+          - name: NODEAPP_DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: nodeapp-secrets
+                key: NODEAPP_DB_PASSWORD
+        ports:
+        - containerPort: 81
+        envFrom:
+        - configMapRef:
+            name: nodeapp-configmap
