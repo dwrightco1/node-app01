@@ -69,7 +69,7 @@ http.createServer(function(request, response) {
 	if (typeof rows !== "undefined" && rows !== null) {
             console.log('Data received from Db:');
             console.log(rows);
-            db_return_data = `Successfully connected to database: ${database_user}@${database_ip}:${database_name}`
+            db_return_data = `x.Successfully connected to database: ${database_user}@${database_ip}:${database_name}`
 	}
 	else {
             db_return_data = `Received empty response from database: ${database_user}@${database_ip}:${database_name}`
